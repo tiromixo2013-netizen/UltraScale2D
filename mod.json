@@ -1,9 +1,11 @@
 {
-  "geode": "4.0.0",
-  "gd": { "android": "2.2081" },
+  "geode": "6.0.0",
+  "gd": {
+    "android": "2.2081"
+  },
   "id": "tiro99.ultrascale2d",
   "name": "UltraScale2D",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "developer": "tiro99",
-  "description": "Experimental graphics scaling and enhancement framework for Geometry Dash."
+  "description": "Experimental spatial image-processing core for Geometry Dash: nearest, bilinear, bicubic, Lanczos3 resampling and adaptive sharpening. Renderer integration is experimental."
 }
