@@ -1,21 +1,25 @@
 # UltraScale2D
 
-Experimental Geode mod project targeting Geometry Dash Android 2.2081 (Android64).
+Experimental Android64 Geode mod for Geometry Dash 2.2081.
 
-## Current status
+## Implemented source code
 
-This is an initial build/loader scaffold only. It currently logs when the mod loads. It does **not** yet implement render scaling, AMD CAS, spatial upscaling, or frame generation.
+The repository now contains a renderer-independent CPU image-processing core in `src/image_pipeline.hpp`:
+
+- Nearest-neighbor resampling
+- Bilinear resampling
+- Catmull-Rom bicubic resampling
+- Lanczos3 resampling
+- Contrast-adaptive spatial sharpening (an original CAS-inspired pass, not AMD FidelityFX CAS)
+
+The mod runs a small 2x2-to-4x4 self-test at load and reports whether the processing functions pass.
+
+## Important implementation status
+
+These algorithms are real C++ implementations, but they are **not yet connected to Geometry Dash's live framebuffer or texture-rendering path**. The current milestone validates the image-processing core and Android64 packaging; it does not yet change the game's displayed image.
+
+Not implemented: AMD FSR 1/2/3, Intel XeSS, NVIDIA NIS, temporal upscaling, motion-vector/depth extraction, and frame generation. Those require renderer integration and, for temporal methods, game-provided motion/depth data. They must not be advertised as working until implemented and tested.
 
 ## Build
 
-The GitHub Actions workflow builds the Android64 target using the official `geode-sdk/build-geode-mod` action. Run it from the Actions tab with **Build Android64 Geode mod** or push a commit to `main`.
-
-When the workflow succeeds, download the `UltraScale2D-Android64` artifact. The resulting `.geode` file can then be installed through Geode.
-
-## Planned work
-
-1. Confirm Android64 build and mod loading on Geometry Dash 2.2081.
-2. Add an in-game settings interface.
-3. Investigate a safe, measurable render-scale implementation.
-4. Evaluate a CAS-style sharpening pass and feasible upscaling methods.
-5. Research frame-generation feasibility separately; do not advertise it as supported until implemented and tested.
+The GitHub Actions workflow builds the Android64 Geode package. The project uses the Geode SDK from the `GEODE_SDK` environment variable and the official Geode CMake setup.
