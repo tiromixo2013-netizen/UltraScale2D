@@ -6,7 +6,6 @@ on:
       - main
   workflow_dispatch:
 
-# Keep only the newest Android64 build for this branch.
 concurrency:
   group: ultrascale2d-android64-${{ github.ref }}
   cancel-in-progress: true
@@ -19,6 +18,16 @@ jobs:
     name: Build UltraScale2D (Android64)
     runs-on: ubuntu-latest
     steps:
+      - name: Check out project source
+        uses: actions/checkout@v4
+
+      - name: Verify project files
+        shell: bash
+        run: |
+          test -f CMakeLists.txt || { echo "::error::CMakeLists.txt is missing from the checked-out repository"; exit 1; }
+          test -f mod.json || { echo "::error::mod.json is missing from the checked-out repository"; exit 1; }
+          test -f src/main.cpp || { echo "::error::src/main.cpp is missing from the checked-out repository"; exit 1; }
+
       - name: Build Geode mod
         uses: geode-sdk/build-geode-mod@main
         with:
@@ -31,7 +40,7 @@ jobs:
         shell: bash
         run: |
           if ! find output -maxdepth 1 -type f -name '*.geode' -print -quit | grep -q .; then
-            echo "::error::The build completed without producing a .geode package in output/"
+            echo "::error::No .geode package was produced in output/"
             find build -maxdepth 5 -type f | head -100 || true
             exit 1
           fi
