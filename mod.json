@@ -5,7 +5,23 @@
   },
   "id": "tiro99.ultrascale2d",
   "name": "UltraScale2D",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "developer": "tiro99",
-  "description": "Experimental spatial image-processing core for Geometry Dash: nearest, bilinear, bicubic, Lanczos3 resampling and adaptive sharpening. Renderer integration is experimental."
+  "description": "Experimental Android64 Geode mod for Geometry Dash 2.2081. Includes image-processing self-tests and GPU diagnostics.",
+  "settings": {
+    "diagnostics-title": {
+      "type": "title",
+      "name": "UltraScale2D Diagnostics",
+      "description": "Collect graphics capability information for development. These tools do not change game rendering."
+    },
+    "diagnostic-actions": {
+      "type": "button",
+      "name": "Diagnostic Tools",
+      "description": "Run a GPU capability check or save a diagnostic report in this mod's save folder.",
+      "buttons": {
+        "run-gpu-diagnostics": "Run GPU Diagnostics",
+        "export-gpu-report": "Export GPU Report"
+      }
+    }
+  }
 }
