@@ -18,5 +18,6 @@ setup_geode_mod(${PROJECT_NAME})
 
 if (ANDROID)
     # OpenGL ES 3.1 / EGL are used only for safe runtime capability detection.
-    target_link_libraries(${PROJECT_NAME} PRIVATE GLESv3 EGL)
+    # Keep the plain target_link_libraries signature used by Geode's setup.
+    target_link_libraries(${PROJECT_NAME} GLESv3 EGL)
 endif()
