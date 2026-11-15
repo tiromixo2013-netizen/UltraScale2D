@@ -5,6 +5,10 @@
 #include <Geode/Geode.hpp>
 #include "image_pipeline.hpp"
 
+#include <fstream>
+#include <sstream>
+#include <string>
+
 using namespace geode::prelude;
 
 namespace {
@@ -26,32 +30,58 @@ bool runImagePipelineSelfTest() {
     return true;
 }
 
+std::string buildDiagnosticReport() {
+    std::ostringstream out;
+    out << "UltraScale2D GPU Diagnostic Report\n";
+    out << "Mod version: 0.2.1\n";
+    out << "Image pipeline self-test: " << (runImagePipelineSelfTest() ? "PASS" : "FAIL") << "\n";
 #if defined(__ANDROID__)
-void logGpuCapabilities() {
     const auto caps = ultrascale::gpu::queryCapabilities();
+    out << "Platform: Android\n";
+    out << "Current EGL context: " << (caps.contextCurrent ? "yes" : "no") << "\n";
     if (!caps.contextCurrent) {
-        log::warn("UltraScale2D: no current EGL context during mod load; OpenGL ES capability probe deferred.");
-        return;
+        out << "GPU query: deferred/unavailable because no EGL context was current on this thread.\n";
+    } else {
+        out << "OpenGL ES version: " << (caps.version ? caps.version : "unavailable") << "\n";
+        out << "GPU renderer: " << (caps.renderer ? caps.renderer : "unknown") << "\n";
+        out << "GPU vendor: " << (caps.vendor ? caps.vendor : "unknown") << "\n";
+        out << "OpenGL ES 3.1 compute baseline: " << (caps.es31 ? "yes" : "no") << "\n";
+        if (caps.es31) {
+            out << "Max compute work-group invocations: " << caps.maxComputeInvocations << "\n";
+            out << "Max shader storage buffer bindings: " << caps.maxStorageBindings << "\n";
+            out << "Max shader storage block size (bytes): " << caps.maxStorageBlockBytes << "\n";
+        }
     }
-    if (!caps.version) {
-        log::warn("UltraScale2D: EGL context exists but GL_VERSION is unavailable.");
-        return;
-    }
-
-    log::info("UltraScale2D: GL version: {}", caps.version);
-    log::info("UltraScale2D: GPU renderer: {}", caps.renderer ? caps.renderer : "unknown");
-    log::info("UltraScale2D: GPU vendor: {}", caps.vendor ? caps.vendor : "unknown");
-    if (!caps.es31) {
-        log::warn("UltraScale2D: OpenGL ES 3.1 compute/SSBO baseline unavailable; GPU culling must stay disabled.");
-        return;
-    }
-    log::info(
-        "UltraScale2D: ES 3.1 compute baseline detected (max invocations: {}, SSBO bindings: {}, max SSBO block: {} bytes).",
-        caps.maxComputeInvocations, caps.maxStorageBindings,
-        static_cast<long long>(caps.maxStorageBlockBytes)
-    );
-}
+#else
+    out << "Platform: non-Android (GPU probe is Android-only)\n";
 #endif
+    out << "GPU culling: not implemented\n";
+    out << "Frame generation: not implemented\n";
+    out << "Live renderer integration: not implemented\n";
+    return out.str();
+}
+
+void runGpuDiagnostics() {
+    const auto report = buildDiagnosticReport();
+    log::info("UltraScale2D diagnostic report:\n{}", report);
+}
+
+void exportGpuReport() {
+    const auto report = buildDiagnosticReport();
+    const auto path = Mod::get()->getSaveDir() / "gpu-report.txt";
+    std::ofstream file(path.string(), std::ios::out | std::ios::trunc);
+    if (!file) {
+        log::error("UltraScale2D: could not write GPU report to {}", path.string());
+        return;
+    }
+    file << report;
+    file.close();
+    if (!file) {
+        log::error("UltraScale2D: failed while writing GPU report to {}", path.string());
+        return;
+    }
+    log::info("UltraScale2D: GPU report exported to {}", path.string());
+}
 }
 
 $on_mod(Loaded) {
@@ -60,8 +90,27 @@ $on_mod(Loaded) {
     } else {
         log::error("UltraScale2D: image pipeline self-test failed.");
     }
+
 #if defined(__ANDROID__)
-    logGpuCapabilities();
+    const auto caps = ultrascale::gpu::queryCapabilities();
+    if (!caps.contextCurrent) {
+        log::warn("UltraScale2D: no current EGL context during mod load; use Run GPU Diagnostics from the mod settings after the game opens.");
+    } else {
+        log::info("UltraScale2D: GPU context detected; use the mod settings to export a full report.");
+    }
 #endif
+
+    // Keep this listener alive for the lifetime of the mod.
+    static auto diagnosticButtonListener =
+        ButtonSettingPressedEventV3(Mod::get(), "diagnostic-actions").listen(
+            [](std::string_view button) {
+                if (button == "run-gpu-diagnostics") {
+                    runGpuDiagnostics();
+                } else if (button == "export-gpu-report") {
+                    exportGpuReport();
+                }
+            }
+        );
+
     log::warn("UltraScale2D: GPU culling is not implemented yet; capability detection alone does not change FPS or move rendering work to the GPU.");
 }
