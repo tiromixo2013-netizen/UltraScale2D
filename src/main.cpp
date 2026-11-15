@@ -3,11 +3,15 @@
 #include "gpu_caps.hpp"
 #endif
 #include <Geode/Geode.hpp>
+#include <Geode/ui/Popup.hpp>
+#include <Geode/ui/ScrollLayer.hpp>
 #include "image_pipeline.hpp"
 
+#include <algorithm>
 #include <fstream>
 #include <sstream>
 #include <string>
+#include <vector>
 
 using namespace geode::prelude;
 
@@ -33,14 +37,14 @@ bool runImagePipelineSelfTest() {
 std::string buildDiagnosticReport() {
     std::ostringstream out;
     out << "UltraScale2D GPU Diagnostic Report\n";
-    out << "Mod version: 0.2.1\n";
+    out << "Mod version: 0.2.2\n";
     out << "Image pipeline self-test: " << (runImagePipelineSelfTest() ? "PASS" : "FAIL") << "\n";
 #if defined(__ANDROID__)
     const auto caps = ultrascale::gpu::queryCapabilities();
     out << "Platform: Android\n";
     out << "Current EGL context: " << (caps.contextCurrent ? "yes" : "no") << "\n";
     if (!caps.contextCurrent) {
-        out << "GPU query: deferred/unavailable because no EGL context was current on this thread.\n";
+        out << "GPU query: unavailable because no EGL context is current on this thread. Run this check from the in-game settings.\n";
     } else {
         out << "OpenGL ES version: " << (caps.version ? caps.version : "unavailable") << "\n";
         out << "GPU renderer: " << (caps.renderer ? caps.renderer : "unknown") << "\n";
@@ -61,10 +65,85 @@ std::string buildDiagnosticReport() {
     return out.str();
 }
 
+std::string wrapReport(const std::string& report, size_t maxChars) {
+    std::istringstream input(report);
+    std::ostringstream output;
+    std::string line;
+    while (std::getline(input, line)) {
+        if (line.empty()) {
+            output << "\n";
+            continue;
+        }
+        while (line.size() > maxChars) {
+            size_t split = line.rfind(' ', maxChars);
+            if (split == std::string::npos || split == 0) split = maxChars;
+            output << line.substr(0, split) << "\n";
+            line.erase(0, split);
+            while (!line.empty() && line.front() == ' ') line.erase(line.begin());
+        }
+        output << line << "\n";
+    }
+    return output.str();
+}
+
+class DiagnosticReportPopup final : public Popup {
+protected:
+    bool setup(std::string const& report) {
+        const auto screen = CCDirector::sharedDirector()->getWinSize();
+        const float width = std::min(620.f, std::max(280.f, screen.width * 0.88f));
+        const float height = std::min(360.f, std::max(190.f, screen.height * 0.82f));
+        if (!Popup::init(width, height, "GJ_square05.png")) return false;
+
+        this->setTitle("GPU Diagnostics", "goldFont.fnt", 0.65f, 18.f);
+
+        const float scrollWidth = width - 30.f;
+        const float scrollHeight = height - 66.f;
+        auto scroll = ScrollLayer::create({scrollWidth, scrollHeight});
+        if (!scroll) return false;
+        scroll->setPosition({15.f, 18.f});
+
+        const size_t charsPerLine = static_cast<size_t>(
+            std::max(42.f, std::min(100.f, scrollWidth / 5.0f))
+        );
+        const auto wrapped = wrapReport(report, charsPerLine);
+        const auto lineCount = static_cast<float>(
+            std::count(wrapped.begin(), wrapped.end(), '\n')
+        );
+        const float contentHeight = std::max(scrollHeight, lineCount * 13.f + 20.f);
+
+        scroll->m_contentLayer->setContentSize({scrollWidth, contentHeight});
+        auto label = CCLabelBMFont::create(wrapped.c_str(), "chatFont.fnt");
+        if (!label) return false;
+        label->setAnchorPoint({0.f, 1.f});
+        label->setScale(0.52f);
+        label->setPosition({9.f, contentHeight - 10.f});
+        scroll->m_contentLayer->addChild(label);
+        scroll->moveToTop();
+
+        m_mainLayer->addChild(scroll);
+        return true;
+    }
+
+public:
+    static DiagnosticReportPopup* create(std::string const& report) {
+        auto ret = new DiagnosticReportPopup();
+        if (ret->setup(report)) {
+            ret->autorelease();
+            return ret;
+        }
+        delete ret;
+        return nullptr;
+    }
+};
+
 void runGpuDiagnostics() {
     const auto report = buildDiagnosticReport();
     log::info("UltraScale2D diagnostic report:\n{}", report);
-    FLAlertLayer::create("UltraScale2D - GPU Diagnostics", report, "OK")->show();
+    if (auto popup = DiagnosticReportPopup::create(report)) {
+        popup->show();
+    } else {
+        FLAlertLayer::create("UltraScale2D", "Could not create the scrollable GPU report window.", "OK")->show();
+    }
 }
 
 void exportGpuReport() {
