@@ -29,3 +29,6 @@ The GitHub Actions workflow builds the Android64 Geode package. It uses `sdk: gi
 The `android-bismuth-port` branch adds a guarded runtime probe for the current EGL/OpenGL ES context. It reports the GL version, renderer/vendor, and (when ES 3.1 is available) compute invocation and shader-storage-buffer limits.
 
 This is diagnostics only. It does **not** dispatch compute shaders, cull sprites, hook the Geometry Dash renderer, or improve FPS. If no EGL context is current when the Geode mod-load event runs, the probe logs that fact and skips GL calls. GPU culling remains a separate implementation milestone.
+
+
+Build target: Geode 5.11.2 / Geometry Dash 2.2081.
