@@ -1,8 +1,9 @@
-#include <Geode/Geode.hpp>
-#include "image_pipeline.hpp"
 #if defined(__ANDROID__)
+// Include GLES 3.1 declarations before Geode/Cocos defines legacy GL name-remapping macros.
 #include "gpu_caps.hpp"
 #endif
+#include <Geode/Geode.hpp>
+#include "image_pipeline.hpp"
 
 using namespace geode::prelude;
 
