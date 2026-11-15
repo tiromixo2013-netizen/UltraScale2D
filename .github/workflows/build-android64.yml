@@ -32,7 +32,7 @@ jobs:
       - name: Build Geode mod
         uses: geode-sdk/build-geode-mod@main
         with:
-          sdk: latest
+          sdk: given
           target: Android64
           android-min-sdk: 23
           build-config: Release
