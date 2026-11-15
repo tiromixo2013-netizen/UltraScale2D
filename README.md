@@ -32,3 +32,6 @@ This is diagnostics only. It does **not** dispatch compute shaders, cull sprites
 
 
 Build target: Geode 5.11.2 / Geometry Dash 2.2081.
+
+
+Android build note: GLESv3/EGL are linked using the same CMake signature as the Geode SDK setup.
