@@ -15,3 +15,8 @@ endif()
 message(STATUS "Found Geode SDK: $ENV{GEODE_SDK}")
 add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode)
 setup_geode_mod(${PROJECT_NAME})
+
+if (ANDROID)
+    # OpenGL ES 3.1 / EGL are used only for safe runtime capability detection.
+    target_link_libraries(${PROJECT_NAME} PRIVATE GLESv3 EGL)
+endif()
