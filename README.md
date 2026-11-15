@@ -30,8 +30,6 @@ The `android-bismuth-port` branch adds a guarded runtime probe for the current E
 
 This is diagnostics only. It does **not** dispatch compute shaders, cull sprites, hook the Geometry Dash renderer, or improve FPS. If no EGL context is current when the Geode mod-load event runs, the probe logs that fact and skips GL calls. GPU culling remains a separate implementation milestone.
 
+Android build compatibility: the target disables CMake precompiled headers to prevent Geode/Cocos legacy GLES2 vertex-array macro aliases from colliding with Android NDK GLES 3.1 declarations in the capability probe.
 
 Build target: Geode 5.11.2 / Geometry Dash 2.2081.
-
-
-Android build note: GLESv3/EGL are linked using the same CMake signature as the Geode SDK setup.
