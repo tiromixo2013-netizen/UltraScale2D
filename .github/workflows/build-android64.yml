@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - main
+      - android-bismuth-port
   workflow_dispatch:
 
 concurrency:
