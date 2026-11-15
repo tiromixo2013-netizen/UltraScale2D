@@ -23,3 +23,9 @@ Not implemented: AMD FSR 1/2/3, Intel XeSS, NVIDIA NIS, temporal upscaling, moti
 ## Build
 
 The GitHub Actions workflow builds the Android64 Geode package. The project uses the Geode SDK from the `GEODE_SDK` environment variable and the official Geode CMake setup.
+
+## Android GPU capability probe (experimental branch)
+
+The `android-bismuth-port` branch adds a guarded runtime probe for the current EGL/OpenGL ES context. It reports the GL version, renderer/vendor, and (when ES 3.1 is available) compute invocation and shader-storage-buffer limits.
+
+This is diagnostics only. It does **not** dispatch compute shaders, cull sprites, hook the Geometry Dash renderer, or improve FPS. If no EGL context is current when the Geode mod-load event runs, the probe logs that fact and skips GL calls. GPU culling remains a separate implementation milestone.
