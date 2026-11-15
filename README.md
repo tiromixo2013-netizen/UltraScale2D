@@ -22,7 +22,7 @@ Not implemented: AMD FSR 1/2/3, Intel XeSS, NVIDIA NIS, temporal upscaling, moti
 
 ## Build
 
-The GitHub Actions workflow builds the Android64 Geode package. The project uses the Geode SDK from the `GEODE_SDK` environment variable and the official Geode CMake setup.
+The GitHub Actions workflow builds the Android64 Geode package. It uses `sdk: given`, so CI installs the Geode SDK version declared in `mod.json` instead of silently selecting a newer release. The project uses the Geode SDK from the `GEODE_SDK` environment variable and the official Geode CMake setup.
 
 ## Android GPU capability probe (experimental branch)
 
