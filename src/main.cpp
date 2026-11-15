@@ -64,6 +64,7 @@ std::string buildDiagnosticReport() {
 void runGpuDiagnostics() {
     const auto report = buildDiagnosticReport();
     log::info("UltraScale2D diagnostic report:\n{}", report);
+    FLAlertLayer::create("UltraScale2D - GPU Diagnostics", report, "OK")->show();
 }
 
 void exportGpuReport() {
@@ -72,15 +73,22 @@ void exportGpuReport() {
     std::ofstream file(path.string(), std::ios::out | std::ios::trunc);
     if (!file) {
         log::error("UltraScale2D: could not write GPU report to {}", path.string());
+        FLAlertLayer::create("UltraScale2D - Export Failed", "Could not write gpu-report.txt. Check the mod save-folder permissions.", "OK")->show();
         return;
     }
     file << report;
     file.close();
     if (!file) {
         log::error("UltraScale2D: failed while writing GPU report to {}", path.string());
+        FLAlertLayer::create("UltraScale2D - Export Failed", "The report file could not be completed.", "OK")->show();
         return;
     }
     log::info("UltraScale2D: GPU report exported to {}", path.string());
+    FLAlertLayer::create(
+        "UltraScale2D - Report Exported",
+        fmt::format("The diagnostic report was saved here:\n{}", path.string()),
+        "OK"
+    )->show();
 }
 }
 
