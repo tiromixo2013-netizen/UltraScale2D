@@ -1,5 +1,8 @@
 #include <Geode/Geode.hpp>
 #include "image_pipeline.hpp"
+#if defined(__ANDROID__)
+#include "gpu_caps.hpp"
+#endif
 
 using namespace geode::prelude;
 
@@ -21,6 +24,33 @@ bool runImagePipelineSelfTest() {
     }
     return true;
 }
+
+#if defined(__ANDROID__)
+void logGpuCapabilities() {
+    const auto caps = ultrascale::gpu::queryCapabilities();
+    if (!caps.contextCurrent) {
+        log::warn("UltraScale2D: no current EGL context during mod load; OpenGL ES capability probe deferred.");
+        return;
+    }
+    if (!caps.version) {
+        log::warn("UltraScale2D: EGL context exists but GL_VERSION is unavailable.");
+        return;
+    }
+
+    log::info("UltraScale2D: GL version: {}", caps.version);
+    log::info("UltraScale2D: GPU renderer: {}", caps.renderer ? caps.renderer : "unknown");
+    log::info("UltraScale2D: GPU vendor: {}", caps.vendor ? caps.vendor : "unknown");
+    if (!caps.es31) {
+        log::warn("UltraScale2D: OpenGL ES 3.1 compute/SSBO baseline unavailable; GPU culling must stay disabled.");
+        return;
+    }
+    log::info(
+        "UltraScale2D: ES 3.1 compute baseline detected (max invocations: {}, SSBO bindings: {}, max SSBO block: {} bytes).",
+        caps.maxComputeInvocations, caps.maxStorageBindings,
+        static_cast<long long>(caps.maxStorageBlockBytes)
+    );
+}
+#endif
 }
 
 $on_mod(Loaded) {
@@ -29,5 +59,8 @@ $on_mod(Loaded) {
     } else {
         log::error("UltraScale2D: image pipeline self-test failed.");
     }
-    log::warn("UltraScale2D: the CPU image-processing core is implemented; game-framebuffer/GL integration is not enabled yet. FSR2, XeSS and frame generation are not implemented.");
+#if defined(__ANDROID__)
+    logGpuCapabilities();
+#endif
+    log::warn("UltraScale2D: GPU culling is not implemented yet; capability detection alone does not change FPS or move rendering work to the GPU.");
 }
