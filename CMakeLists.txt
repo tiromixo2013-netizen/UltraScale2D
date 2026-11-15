@@ -17,7 +17,12 @@ add_subdirectory($ENV{GEODE_SDK} ${CMAKE_CURRENT_BINARY_DIR}/geode)
 setup_geode_mod(${PROJECT_NAME})
 
 if (ANDROID)
+    # Geode/Cocos' Android precompiled header defines legacy GLES2 VAO macros.
+    # Those macros collide with GLES 3.1 declarations in gpu_caps.hpp, even
+    # when that header appears first in main.cpp, because PCH is force-included.
+    # Disable PCH for this target so source include order is respected.
+    set_property(TARGET ${PROJECT_NAME} PROPERTY DISABLE_PRECOMPILE_HEADERS ON)
+
     # OpenGL ES 3.1 / EGL are used only for safe runtime capability detection.
-    # Keep the plain target_link_libraries signature used by Geode's setup.
     target_link_libraries(${PROJECT_NAME} GLESv3 EGL)
 endif()
